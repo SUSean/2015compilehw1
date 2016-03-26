@@ -1,5 +1,16 @@
 %option noyywrap
 %{
+	/*	1.Variable declaration/initialization
+		2.Int, double, char
+		3.Simple statement (number,character,string)
+		4.Branch (if,else if,else,for,while)
+		5.Function
+		6.Comment (//,/*,*/)
+		7.Switch (switch,case,default)
+		8.Variable scope
+		9.Array
+		10.Pointer/Address	*/
+
 	#include <stdio.h>
 	#include <stdlib.h>
 	#include <string.h>
@@ -28,7 +39,7 @@
 %x COMMENT2
 sp [ \f\n\r\t\v]
 branch (if|while|for|else|else{sp}if)
-operator ("++"|"--"|"=="|"!="|"<<"|">>"|"&&"|"||"|"+"|"-"|"*"|"/"|"="|"<"|">"|"&"|"|"|"!")
+operator ("++"|"--"|"=="|"!="|"<<"|">>"|"<="|">="|"&&"|"||"|"+"|"-"|"*"|"/"|"="|"<"|">"|"&"|"|"|"!")
 data (int|double|char|struct)
 punctuation (","|";"|":")
 name [[:alpha:]_][[:alnum:]_]*
@@ -102,7 +113,7 @@ switch (switch|case|default)
 						array_flag=0;
 					}
 				}
-{name}/=	{printf("#%d variable initialization\n",count);REJECT;}
+{name}/=				{if(flag==1){printf("#%d variable initialization\n",count)};REJECT;}
 {name}/\[[[:digit:]]*\]	{array_flag=1;REJECT;}
 <COMMENT1>\n	{count++;BEGIN 0;}
 <COMMENT2>\n	{count++;printf("#%d comment\n",count);}
