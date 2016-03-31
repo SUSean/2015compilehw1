@@ -4,17 +4,22 @@
    or not to code. */
 
 // function declaration
-int a;
-int sub(int x, int y);
 
+int sub(int x, int y);
+struct Student_Detail {
+    int age;
+    char *name;
+    char *address;
+};
+int a;
 int main(){
 
   // variables
-  int a[10];
+  int a[][];
   int *b=&a;
   double c=10.6;
   char d='y';
-  
+
   // statements
   a = 10/2;
   c = (b+3)*4-5;

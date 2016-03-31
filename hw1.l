@@ -5,11 +5,14 @@
 		3.Simple statement (number,character,string)
 		4.Branch (if,else if,else,for,while)
 		5.Function
-		6.Comment (//,/*,*/)
+		6.Comment 
 		7.Switch (switch,case,default)
 		8.Variable scope
 		9.Array
-		10.Pointer/Address	*/
+		10.Pointer
+		11.Include/define
+		12.Struct
+	*/
 
 	#include <stdio.h>
 	#include <stdlib.h>
@@ -30,6 +33,7 @@
 	};
 	struct variable variables[variables_num];
 	struct function functions[functions_num];
+	
 	char nowscope[name_length]="global";
 	int array_flag=0;
 	int global_flag=0;
@@ -37,33 +41,35 @@
 %}
 %x COMMENT1
 %x COMMENT2
+%x DEFINE
 sp [ \f\n\r\t\v]
 branch (if|while|for|else|else{sp}if)
-operator ("++"|"--"|"=="|"!="|"<<"|">>"|"<="|">="|"&&"|"||"|"+"|"-"|"*"|"/"|"="|"<"|">"|"&"|"|"|"!")
-data (int|double|char|struct)
-punctuation (","|";"|":")
-name [[:alpha:]_][[:alnum:]_]*
-active (return|continue|break|typedef)
+operator ("++"|"--"|"=="|"!="|"<="|">="|"<<"|">>"|"&&"|"||"|"+"|"-"|"*"|"/"|"="|"<"|">"|"&"|"|"|"!"|"%")
+data (int{sp}*\**|double{sp}*\**|char{sp}*\**|void|struct)
+punctuation (","|":")
+name [[:alpha:]_][[:alnum:]_\-\>\.]*
+active (#include|return|continue|break|typedef)
 switch (switch|case|default)
+define #(define|ifdef|ifndef)
 %%
 \n					{count++;} 	//Record lines here
 "//" 				{printf("#%d comment\n",count);BEGIN COMMENT1;}
 "/*" 				{printf("#%d comment\n",count);BEGIN COMMENT2;}
+{define}			{printf("#%d %s ",count,yytext);BEGIN DEFINE;}
+\<{name}\.h\>		{printf("#%d headerfile : %s\n",count,yytext);}
 {data}				{printf("#%d data type  : %s\n",count,yytext);flag=1;}
 {operator}			{printf("#%d operator   : %s\n",count,yytext);}
 {branch}/{sp}*\(*	{printf("#%d %s\n",count,yytext);}
 {punctuation}		{printf("#%d %s\n",count,yytext);}
 [\(\{]				{printf("#%d %s\n",count,yytext);global_flag++;}
 [\)\}]				{printf("#%d %s\n",count,yytext);global_flag--;}
-";"					{printf("#%d %s\n",count,yytext);if(global_flag==0){strcpy(nowscope,"global");flag=0;}}
+";"					{printf("#%d %s\n",count,yytext);flag=0;if(global_flag==0){strcpy(nowscope,"global");}}
 {active}			{printf("#%d %s\n",count,yytext);}
 {switch}/{sp}*\(*	{printf("#%d %s\n",count,yytext);}
-"*"/{sp}*{name}		{printf("#%d pointer    : %s\n",count,yytext);}
-"&"/{sp}*{name}		{printf("#%d address    : %s\n",count,yytext);}
-\[[[:digit:]]*\]	{printf("#%d array      : %s\n",count,yytext);}
+(\[[[:digit:]]*\])*	{printf("#%d array      : %s\n",count,yytext);}
 \'.\'				{printf("#%d character  : %s\n",count,yytext);}
 \".+\"				{printf("#%d string     : %s\n",count,yytext);}
-[[:digit:]]*"."?[[:digit:]]*	{printf("#%d number     : %s\n",count,yytext);}
+[[:digit:]]+"."?[[:digit:]]*	{printf("#%d number     : %s\n",count,yytext);}
 {name}/{sp}*\(	{	int i=0;
 					while(i<fnum){
 						if(strcmp(yytext,functions[i].name)==0){
@@ -113,12 +119,13 @@ switch (switch|case|default)
 						array_flag=0;
 					}
 				}
-{name}/=				{if(flag==1){printf("#%d variable initialization\n",count)};REJECT;}
-{name}/\[[[:digit:]]*\]	{array_flag=1;REJECT;}
+{name}/{sp}*=				{if(flag==1){printf("#%d variable initialization\n",count);}REJECT;}
+{name}/(\[[[:digit:]]*\])*	{array_flag=1;REJECT;}
 <COMMENT1>\n	{count++;BEGIN 0;}
 <COMMENT2>\n	{count++;printf("#%d comment\n",count);}
 <COMMENT2>"*/"	{BEGIN 0;}
 <COMMENT1,COMMENT2>.
+<DEFINE>\n		{printf("%s",yytext);BEGIN 0;}
 .				
 %%
 int main(){
