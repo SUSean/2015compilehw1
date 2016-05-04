@@ -1,4 +1,4 @@
-flex hw1.l
+flex 102062129_hw1.l
 gcc lex.yy.c
 ./a.out < testfile.c
 ./a.out < testcase1.c

@@ -15,8 +15,8 @@ int a;
 int main(){
 
   // variables
-  int a[][];
-  int *b=&a;
+  int a[100][100];
+  int *b=a;
   double c=10.6;
   char d='y';
 
